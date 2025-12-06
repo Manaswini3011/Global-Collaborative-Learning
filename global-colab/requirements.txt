@@ -6,8 +6,8 @@ cryptography==41.0.7
 python-dotenv==1.0.0
 Werkzeug==3.0.1
 
-# Optional: For real translation (uncomment one):
-# googletrans==4.0.0rc1  # Free, no API key needed
+# Translation library (uncomment to enable real translation):
+googletrans==4.0.0rc1  # Free, no API key needed - Recommended
 # google-cloud-translate==3.11.1  # Paid, requires Google Cloud account
 # deepl==1.15.0  # Paid, high quality
 # libretranslate==1.2.9  # Open source, self-hosted

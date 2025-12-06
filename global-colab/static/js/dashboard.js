@@ -34,6 +34,17 @@ function showSection(sectionName) {
         event.target.classList.add('active');
     }
     
+    // Update body class for discussions section
+    if (sectionName === 'discussions') {
+        document.body.classList.add('discussions-active');
+    } else {
+        document.body.classList.remove('discussions-active');
+        // Close room modal if open when leaving discussions section
+        if (document.getElementById('roomModal').classList.contains('active')) {
+            closeRoomModal();
+        }
+    }
+    
     // Load section-specific data
     if (sectionName === 'discover') {
         loadDiscoverUsers();
@@ -218,9 +229,24 @@ async function loadRooms() {
 
 // Open Discussion Room
 async function openRoom(roomId, roomName) {
+    // Only allow opening room modal when discussions section is active
+    const discussionsSection = document.getElementById('discussions');
+    if (!discussionsSection || !discussionsSection.classList.contains('active')) {
+        // Switch to discussions section first
+        showSection('discussions');
+        // Update nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.textContent.trim() === 'Discussions') {
+                link.classList.add('active');
+            }
+        });
+    }
+    
     currentRoomId = roomId;
     document.getElementById('roomTitle').textContent = roomName;
     document.getElementById('roomModal').classList.add('active');
+    document.body.classList.add('discussions-active');
     
     // Load room members
     await loadRoomMembers(roomId);
@@ -266,6 +292,7 @@ function closeRoomModal() {
         clearInterval(messagePollInterval);
     }
     currentRoomId = null;
+    // Note: We keep discussions-active class on body to allow reopening
 }
 
 async function loadMessages(roomId) {

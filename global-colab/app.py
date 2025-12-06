@@ -7,6 +7,20 @@ from datetime import datetime
 import os
 from functools import wraps
 import re
+import sys
+
+# Translation API
+try:
+    from googletrans import Translator
+    TRANSLATOR_AVAILABLE = True
+    translator = Translator()
+except ImportError:
+    TRANSLATOR_AVAILABLE = False
+    translator = None
+    # Only print warning if in debug mode to avoid cluttering production logs
+    import sys
+    if '--debug' in sys.argv or os.getenv('FLASK_ENV') == 'development':
+        print("Warning: googletrans not installed. Translation will use placeholder.")
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-in-production'
@@ -40,55 +54,104 @@ def login_required(f):
 
 def translate_text(text, from_lang, to_lang):
     """
-    Translate text from one language to another.
-    This is a placeholder function - in production, use a real translation API like:
-    - Google Translate API
-    - DeepL API
-    - Azure Translator
-    - LibreTranslate (open source)
+    Translate text from one language to another using Google Translate API.
+    Falls back to placeholder if API is not available.
     
-    Example integration with googletrans (free, no API key needed):
-    ```python
-    from googletrans import Translator
-    translator = Translator()
-    try:
-        result = translator.translate(text, src=from_lang, dest=to_lang)
-        return result.text
-    except:
-        return text
-    ```
+    Args:
+        text: Text to translate
+        from_lang: Source language code (e.g., 'en', 'es', 'fr')
+        to_lang: Target language code (e.g., 'en', 'es', 'fr')
     
-    Example with Google Cloud Translation API (requires API key):
-    ```python
-    from google.cloud import translate_v2 as translate
-    translate_client = translate.Client()
-    result = translate_client.translate(text, source_language=from_lang, target_language=to_lang)
-    return result['translatedText']
-    ```
+    Returns:
+        Translated text or original text with indicator if translation fails
     """
+    # Validate input
+    if not text or not isinstance(text, str):
+        return text or ""
+    
     # If same language, return original
     if from_lang == to_lang or not from_lang or not to_lang:
         return text
     
-    # Simple demo translations for common phrases
-    # In production, replace this entire function with actual API calls
+    # Use Google Translate API if available
+    if TRANSLATOR_AVAILABLE and translator:
+        try:
+            # Map language codes to googletrans format
+            lang_map = {
+                'en': 'en', 'es': 'es', 'fr': 'fr', 'pt': 'pt', 
+                'ja': 'ja', 'zh': 'zh-cn', 'zh-cn': 'zh-cn', 'zh-tw': 'zh-tw',
+                'de': 'de', 'hi': 'hi', 'ar': 'ar', 'ru': 'ru',
+                'it': 'it', 'ko': 'ko', 'nl': 'nl', 'pl': 'pl',
+                'tr': 'tr', 'vi': 'vi', 'th': 'th', 'id': 'id'
+            }
+            
+            src_lang = lang_map.get(from_lang.lower(), 'auto')
+            dest_lang = lang_map.get(to_lang.lower(), 'en')
+            
+            # Handle empty or very short text
+            if len(text.strip()) == 0:
+                return text
+            
+            # Translate the text with retry logic
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    result = translator.translate(text, src=src_lang, dest=dest_lang)
+                    if result and result.text:
+                        return result.text
+                except Exception as retry_error:
+                    if attempt == max_retries - 1:
+                        raise retry_error
+                    # Wait a bit before retry (simple delay)
+                    import time
+                    time.sleep(0.5)
+            
+            # If we get here, translation didn't return text
+            return text
+            
+        except Exception as e:
+            # Log error for debugging
+            error_msg = str(e)
+            if '--debug' in sys.argv or os.getenv('FLASK_ENV') == 'development':
+                print(f"Translation error ({from_lang} -> {to_lang}): {error_msg}")
+            
+            # For certain errors, try without specifying source language
+            if 'could not be detected' in error_msg.lower() or 'invalid' in error_msg.lower():
+                try:
+                    result = translator.translate(text, dest=dest_lang)
+                    if result and result.text:
+                        return result.text
+                except:
+                    pass
+            
+            # Fallback to placeholder on error
+            return f"🌐 [{to_lang.upper()}] {text}"
+    
+    # Fallback: Simple demo translations for common phrases
     text_lower = text.lower().strip()
     
     # Common greeting translations
     greetings = {
-        'en': {'es': 'hola', 'fr': 'bonjour', 'pt': 'olá', 'ja': 'こんにちは', 'zh': '你好', 'de': 'hallo', 'hi': 'नमस्ते'},
-        'hello': {'es': 'hola', 'fr': 'bonjour', 'pt': 'olá', 'ja': 'こんにちは', 'zh': '你好', 'de': 'hallo', 'hi': 'नमस्ते'},
-        'hi': {'es': 'hola', 'fr': 'salut', 'pt': 'oi', 'ja': 'こんにちは', 'zh': '你好', 'de': 'hallo', 'hi': 'नमस्ते'},
+        'hello': {'es': 'hola', 'fr': 'bonjour', 'pt': 'olá', 'ja': 'こんにちは', 
+                  'zh': '你好', 'de': 'hallo', 'hi': 'नमस्ते', 'ar': 'مرحبا', 
+                  'ru': 'привет', 'it': 'ciao', 'ko': '안녕하세요'},
+        'hi': {'es': 'hola', 'fr': 'salut', 'pt': 'oi', 'ja': 'こんにちは', 
+               'zh': '你好', 'de': 'hallo', 'hi': 'नमस्ते', 'ar': 'مرحبا', 
+               'ru': 'привет', 'it': 'ciao', 'ko': '안녕하세요'},
+        'thanks': {'es': 'gracias', 'fr': 'merci', 'pt': 'obrigado', 'ja': 'ありがとう', 
+                   'zh': '谢谢', 'de': 'danke', 'hi': 'धन्यवाद', 'ar': 'شكرا', 
+                   'ru': 'спасибо', 'it': 'grazie', 'ko': '감사합니다'},
+        'thank you': {'es': 'gracias', 'fr': 'merci', 'pt': 'obrigado', 'ja': 'ありがとう', 
+                      'zh': '谢谢', 'de': 'danke', 'hi': 'धन्यवाद', 'ar': 'شكرا', 
+                      'ru': 'спасибо', 'it': 'grazie', 'ko': '감사합니다'},
     }
     
     # Check for common phrases
     if text_lower in greetings:
-        if to_lang in greetings[text_lower]:
-            return greetings[text_lower][to_lang]
+        if to_lang.lower() in greetings[text_lower]:
+            return greetings[text_lower][to_lang.lower()]
     
-    # For demo: return text with translation indicator
-    # In production, this would be the actual translated text from API
-    # For now, we'll use a simple indicator to show translation is working
+    # Fallback: return text with translation indicator
     return f"🌐 [{to_lang.upper()}] {text}"
 
 def get_user_language(user_id):
@@ -356,7 +419,24 @@ def create_project():
 @app.route('/api/recommendations', methods=['GET'])
 @login_required
 def get_recommendations():
-    """Get AI-powered project recommendations"""
+    """
+    Get AI-powered project recommendations
+    
+    TODO: Integrate with external AI API for dynamic recommendations:
+    - OpenAI API (GPT models) for generating personalized project ideas
+    - Hugging Face API for ML-based recommendations
+    - Custom recommendation service
+    
+    Example with OpenAI:
+    ```python
+    import openai
+    openai.api_key = os.getenv('OPENAI_API_KEY')
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": f"Generate project recommendations for user with skills: {user['skills']}, interests: {user['interests']}"}]
+    )
+    ```
+    """
     try:
         conn = get_db_connection()
         cursor = conn.cursor(pymysql.cursors.DictCursor)
@@ -365,7 +445,8 @@ def get_recommendations():
         cursor.execute("SELECT skills, interests FROM users WHERE user_id = %s", (session['user_id'],))
         user = cursor.fetchone()
         
-        # Simulate AI recommendations based on user profile
+        # TODO: Replace with actual AI API call for dynamic recommendations
+        # For now, using curated recommendations based on user profile
         recommendations = [
             {
                 'recommendation_id': 1,
@@ -498,21 +579,33 @@ def get_messages(room_id):
         
         # Translate messages to current user's language
         for message in messages:
-            original_text = message['message_text']
+            original_text = message.get('message_text') or ''
             sender_lang = message.get('sender_language') or message.get('original_language') or 'en'
             
+            # Normalize language codes
+            if sender_lang:
+                sender_lang = sender_lang.lower()
+            if current_user_lang:
+                current_user_lang = current_user_lang.lower()
+            
             # If message is in different language, translate it
-            if sender_lang != current_user_lang:
-                translated_text = translate_text(original_text, sender_lang, current_user_lang)
-                message['translated_text'] = translated_text
-                message['display_text'] = translated_text  # Text to display to user
-                message['original_text'] = original_text  # Keep original for reference
+            if sender_lang != current_user_lang and original_text:
+                try:
+                    translated_text = translate_text(original_text, sender_lang, current_user_lang)
+                    message['translated_text'] = translated_text
+                    message['display_text'] = translated_text  # Text to display to user
+                except Exception as e:
+                    # If translation fails, use original text
+                    message['translated_text'] = None
+                    message['display_text'] = original_text
+                    if '--debug' in sys.argv or os.getenv('FLASK_ENV') == 'development':
+                        print(f"Translation failed for message: {str(e)}")
             else:
                 message['translated_text'] = None
                 message['display_text'] = original_text
-                message['original_text'] = original_text
             
-            message['is_translated'] = sender_lang != current_user_lang
+            message['original_text'] = original_text  # Keep original for reference
+            message['is_translated'] = sender_lang != current_user_lang and original_text
             message['original_language'] = sender_lang
             message['display_language'] = current_user_lang
         
@@ -550,11 +643,21 @@ def send_message(room_id):
             return jsonify({'error': 'Only team members can send messages'}), 403
         
         data = request.json
-        message_text = data['message_text']
+        if not data or 'message_text' not in data:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'message_text is required'}), 400
+        
+        message_text = data['message_text'].strip()
+        if not message_text:
+            cursor.close()
+            conn.close()
+            return jsonify({'error': 'message_text cannot be empty'}), 400
         
         # Get sender's language
         cursor.execute("SELECT language FROM users WHERE user_id = %s", (session['user_id'],))
-        sender_lang = cursor.fetchone()[0] or 'en'
+        result = cursor.fetchone()
+        sender_lang = (result[0] if result and result[0] else 'en') or 'en'
         
         # Store original message with sender's language
         # Translation will happen when messages are retrieved based on each user's language
@@ -571,6 +674,168 @@ def send_message(room_id):
         return jsonify({'message': 'Message sent successfully', 'message_id': message_id}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ==================== TRANSLATION API ====================
+
+@app.route('/api/translate', methods=['POST'])
+@login_required
+def translate_api():
+    """
+    Translate text from one language to another.
+    Supports both automatic language detection and manual language specification.
+    
+    Request body:
+    {
+        "text": "Text to translate",
+        "from_lang": "en" (optional, defaults to 'auto'),
+        "to_lang": "es" (required)
+    }
+    
+    Response:
+    {
+        "translated_text": "Translated text",
+        "original_text": "Original text",
+        "from_lang": "en",
+        "to_lang": "es",
+        "success": true
+    }
+    """
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        text = data.get('text', '').strip()
+        if not text:
+            return jsonify({'error': 'Text to translate is required'}), 400
+        
+        from_lang = data.get('from_lang', 'auto')
+        to_lang = data.get('to_lang', 'en')
+        
+        if not to_lang:
+            return jsonify({'error': 'Target language (to_lang) is required'}), 400
+        
+        # Translate the text
+        translated_text = translate_text(text, from_lang, to_lang)
+        
+        # Detect actual source language if auto was used
+        detected_lang = from_lang
+        if from_lang == 'auto' and TRANSLATOR_AVAILABLE and translator:
+            try:
+                result = translator.detect(text)
+                if result and result.lang:
+                    detected_lang = result.lang
+            except:
+                pass
+        
+        return jsonify({
+            'translated_text': translated_text,
+            'original_text': text,
+            'from_lang': detected_lang,
+            'to_lang': to_lang,
+            'success': True
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
+
+@app.route('/api/translate/batch', methods=['POST'])
+@login_required
+def translate_batch_api():
+    """
+    Translate multiple texts at once.
+    
+    Request body:
+    {
+        "texts": ["Text 1", "Text 2", "Text 3"],
+        "from_lang": "en" (optional),
+        "to_lang": "es" (required)
+    }
+    
+    Response:
+    {
+        "translations": [
+            {"original": "Text 1", "translated": "Translated 1"},
+            {"original": "Text 2", "translated": "Translated 2"}
+        ],
+        "success": true
+    }
+    """
+    try:
+        data = request.json
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        texts = data.get('texts', [])
+        if not texts or not isinstance(texts, list):
+            return jsonify({'error': 'Texts array is required'}), 400
+        
+        from_lang = data.get('from_lang', 'auto')
+        to_lang = data.get('to_lang', 'en')
+        
+        if not to_lang:
+            return jsonify({'error': 'Target language (to_lang) is required'}), 400
+        
+        translations = []
+        for text in texts:
+            if text:
+                translated = translate_text(str(text), from_lang, to_lang)
+                translations.append({
+                    'original': text,
+                    'translated': translated
+                })
+        
+        return jsonify({
+            'translations': translations,
+            'success': True
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'success': False
+        }), 500
+
+@app.route('/api/translate/languages', methods=['GET'])
+def get_supported_languages():
+    """
+    Get list of supported languages for translation.
+    
+    Response:
+    {
+        "languages": [
+            {"code": "en", "name": "English"},
+            {"code": "es", "name": "Spanish"}
+        ]
+    }
+    """
+    languages = [
+        {'code': 'en', 'name': 'English'},
+        {'code': 'es', 'name': 'Spanish'},
+        {'code': 'fr', 'name': 'French'},
+        {'code': 'pt', 'name': 'Portuguese'},
+        {'code': 'de', 'name': 'German'},
+        {'code': 'it', 'name': 'Italian'},
+        {'code': 'ja', 'name': 'Japanese'},
+        {'code': 'zh', 'name': 'Chinese (Simplified)'},
+        {'code': 'zh-cn', 'name': 'Chinese (Simplified)'},
+        {'code': 'zh-tw', 'name': 'Chinese (Traditional)'},
+        {'code': 'ko', 'name': 'Korean'},
+        {'code': 'hi', 'name': 'Hindi'},
+        {'code': 'ar', 'name': 'Arabic'},
+        {'code': 'ru', 'name': 'Russian'},
+        {'code': 'nl', 'name': 'Dutch'},
+        {'code': 'pl', 'name': 'Polish'},
+        {'code': 'tr', 'name': 'Turkish'},
+        {'code': 'vi', 'name': 'Vietnamese'},
+        {'code': 'th', 'name': 'Thai'},
+        {'code': 'id', 'name': 'Indonesian'},
+    ]
+    
+    return jsonify({'languages': languages}), 200
 
 # ==================== PROGRESS TRACKING ====================
 
