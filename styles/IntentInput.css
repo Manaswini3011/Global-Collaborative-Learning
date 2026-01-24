@@ -1,0 +1,88 @@
+.intent-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.intent-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.intent-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.intent-header h1 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intent-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.intent-form {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 40px;
+}
+
+.intent-textarea {
+  min-height: 150px;
+  font-size: 16px;
+}
+
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.examples-section {
+  margin-top: 40px;
+}
+
+.examples-section h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--accent-green);
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.example-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.example-card:hover {
+  border-color: var(--accent-green);
+  box-shadow: 0 4px 12px var(--hover-glow);
+  transform: translateY(-2px);
+}
+
+.example-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+

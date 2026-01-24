@@ -1,0 +1,247 @@
+.edit-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding-bottom: 40px;
+}
+
+.edit-header {
+  margin-bottom: 32px;
+}
+
+.edit-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.edit-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+.edit-form {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.checkbox-label:hover {
+  background: var(--bg-tertiary);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--accent-green);
+}
+
+.checkbox-label span {
+  color: var(--text-primary);
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.preview-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: var(--bg-primary);
+  border: 1px solid var(--accent-green);
+  border-radius: 12px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.preview-header h3 {
+  color: var(--accent-green);
+  font-size: 20px;
+  margin: 0;
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.preview-summary {
+  margin-bottom: 20px;
+  padding: 12px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.preview-summary p {
+  color: var(--text-primary);
+  margin: 0;
+  font-size: 14px;
+}
+
+.difficulty-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 4px;
+}
+
+.difficulty-badge.easy {
+  background: rgba(0, 255, 0, 0.2);
+  color: var(--accent-green);
+}
+
+.difficulty-badge.medium {
+  background: rgba(255, 255, 0, 0.2);
+  color: #ffaa00;
+}
+
+.difficulty-badge.hard {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff4444;
+}
+
+.preview-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.preview-difficulty-group {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent-green);
+}
+
+.preview-difficulty-group h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preview-difficulty-group h4.difficulty-easy {
+  color: var(--accent-green);
+}
+
+.preview-difficulty-group h4.difficulty-medium {
+  color: #ffaa00;
+}
+
+.preview-difficulty-group h4.difficulty-hard {
+  color: #ff4444;
+}
+
+.preview-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-question-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.preview-question-item:hover {
+  border-color: var(--accent-green);
+  transform: translateX(4px);
+}
+
+.preview-question-item .question-title {
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.preview-question-item .question-skill {
+  padding: 4px 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.preview-question-item .question-time {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.preview-more {
+  padding: 8px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.preview-trigger {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+

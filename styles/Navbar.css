@@ -1,0 +1,84 @@
+.navbar {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+  color: var(--accent-green);
+  transform: scale(1.05);
+}
+
+.brand-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 8px var(--accent-green));
+}
+
+.brand-text {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+}
+
+.nav-link:hover {
+  color: var(--accent-green);
+  background: var(--bg-tertiary);
+  transform: translateY(-2px);
+}
+
+.logout-btn {
+  border: 1px solid var(--border-color);
+}
+
+.logout-btn:hover {
+  border-color: var(--accent-green);
+  box-shadow: 0 4px 12px var(--hover-glow);
+}
+
